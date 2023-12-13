@@ -54,18 +54,24 @@ def get_total_duration():
 
 def choose_movement_pattern():
     choice = get_input("Choose a movement pattern",
-                       {"a": "Random", "b": "Circle (WSDA)", "c": "Zigzag (WDSA)", "d": "Custom"})
+                       {"a": "Random", "b": "Circle (WSDA)", "c": "Zigzag (WDSA)", "d": "Custom"}).lower()
+
+    if choice == 'd':
+        return get_custom_pattern()
+
     patterns = {
         "a": None,
         "b": ['w', 'a', 's', 'd'],
-        "c": ['w', 'd', 's', 'a'],
-        "d": get_custom_pattern()
+        "c": ['w', 'd', 's', 'a']
     }
     return patterns.get(choice, ['w', 'a', 's', 'd'])
 
 
 def get_custom_pattern():
-    return list(input("Enter your custom pattern (e.g. 'wasd'): "))
+    a = input("Podaj swój niestandardowy wzorzec (np. 'wasd'): ")
+    # Usunięcie nadmiarowych spacji z każdego elementu ciągu znaków
+    a = "".join(a.split()).split(',')
+    return a
 
 
 def simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern):
