@@ -1,4 +1,3 @@
-import pydirectinput as pdi
 import pyautogui as pg
 import time
 import random
@@ -8,7 +7,7 @@ import keyboard
 import threading
 
 f10_pressed = False
-
+pg.FAILSAFE = False
 
 def listen_for_f10():
     global f10_pressed
@@ -34,10 +33,19 @@ def stop_recording():
     time.sleep(2)
 
 
-def walk(direction, duration):
-    pg.keyDown(direction)
-    time.sleep(duration)
-    pg.keyUp(direction)
+def walk(action, duration):
+    mouse_actions = {'left_click', 'right_click'}
+
+    if action in mouse_actions:
+        if action == 'left_click':
+            pg.click()
+        elif action == 'right_click':
+            pg.rightClick()
+        time.sleep(duration)  # Opóźnienie po kliknięciu
+    else:
+        pg.keyDown(action)
+        time.sleep(duration)
+        pg.keyUp(action)
 
 
 def get_input(prompt, options):
@@ -71,10 +79,9 @@ def get_total_duration():
         return int(total_duration)
     elif total_duration == "":
         return 900
-    elif total_duration.isascii():
-        print("Invalid")
+    else:
+        print("Invalid input. Please enter a number.")
         get_total_duration()
-
 
 
 def choose_movement_pattern():
@@ -93,7 +100,8 @@ def choose_movement_pattern():
 
 
 def get_custom_pattern():
-    a = input("Enter your custom Pattern (e.g 'space', 'a', 'shift'): ")
+    a = input("Enter your custom Pattern (e.g space, ctrlleft, shiftright): \n"
+              "To Stimulate Mouse clicks as a button enter: 'left_click' or 'right_click'\n'")
     a = "".join(a.lower().split()).split(',')
     return a
 
@@ -101,7 +109,11 @@ def get_custom_pattern():
 def simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern):
     f10_listener_thread = threading.Thread(target=listen_for_f10)
     f10_listener_thread.start()
-    print("Press ENTER to start walking...")
+    print(f"------------------------------------------------------------\n"
+          f"------------Now you should go back to your game-------------\n"
+          f"---------------Press ENTER to start walking-----------------\n"
+          f"Press F10 to abort(Script will finish current pattern cycle)\n"
+          f"------------------------------------------------------------\n")
     keyboard.wait('enter')
 
     if start_presentmon:
@@ -131,9 +143,6 @@ def simulate_movement(press_duration, total_duration, start_presentmon, movement
 if __name__ == '__main__':
     start_presentmon = run_presentmon()
     press_duration = choose_press_duration()
-    if start_presentmon:
-        total_duration = get_total_duration()
-    else:
-        total_duration = 0
+    total_duration = get_total_duration() if start_presentmon else 0
     movement_pattern = choose_movement_pattern()
     simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern)
