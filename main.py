@@ -1,3 +1,4 @@
+import pydirectinput as pdi
 import pyautogui as pg
 import time
 import random
@@ -23,13 +24,13 @@ def signal_handler(signal, frame):
 
 
 def start_recording():
-    pg.hotkey('shift', 'f11')
+    pg.hotkey('shift', 'f12')
     print("Recording started...")
 
 
 def stop_recording():
     print('Stopping CapFrame...')
-    pg.hotkey('shift', 'f11')
+    pg.hotkey('shift', 'f12')
     time.sleep(2)
 
 
@@ -38,14 +39,17 @@ def walk(action, duration):
 
     if action in mouse_actions:
         if action == 'left_click':
-            pg.click()
+            pdi.mouseDown(button='left')
+            time.sleep(duration)
+            pdi.mouseUp(button='left')
         elif action == 'right_click':
-            pg.rightClick()
-        time.sleep(duration)  # Opóźnienie po kliknięciu
+            pdi.mouseDown(button='right')
+            time.sleep(duration)
+            pdi.mouseUp(button='right')
     else:
-        pg.keyDown(action)
+        pdi.keyDown(action)
         time.sleep(duration)
-        pg.keyUp(action)
+        pdi.keyUp(action)
 
 
 def get_input(prompt, options):
@@ -141,6 +145,7 @@ def simulate_movement(press_duration, total_duration, start_presentmon, movement
 
 
 if __name__ == '__main__':
+    print("Welcome to \033[94mChodzenie 3.0\033[0m. To start collecting logs, please switch CapframeX/Presentmon Hotkey to\033[93m Shift + F12\033[0m.")
     start_presentmon = run_presentmon()
     press_duration = choose_press_duration()
     total_duration = get_total_duration() if start_presentmon else 0
