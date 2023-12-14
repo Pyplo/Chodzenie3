@@ -18,10 +18,6 @@ def listen_for_f10():
             break
 
 
-
-
-
-# Obsługa sygnałów zamykania
 def signal_handler(signal, frame):
     stop_recording()
     sys.exit(0)
@@ -39,9 +35,9 @@ def stop_recording():
 
 
 def walk(direction, duration):
-    pdi.keyDown(direction)
+    pg.keyDown(direction)
     time.sleep(duration)
-    pdi.keyUp(direction)
+    pg.keyUp(direction)
 
 
 def get_input(prompt, options):
@@ -58,7 +54,10 @@ def get_input(prompt, options):
 
 def run_presentmon():
     choice = get_input("Should the script start and stop presentmon?", {"y": "Yes", "n": "No"})
-    return choice == 'y'
+    if choice == 'y':
+        return True
+    elif choice == 'n':
+        return False
 
 
 def choose_press_duration():
@@ -68,7 +67,14 @@ def choose_press_duration():
 
 def get_total_duration():
     total_duration = input("Enter in seconds the total duration for the script to run (Default: 900s): ")
-    return int(total_duration) if total_duration.isdigit() else 900
+    if total_duration.isdigit():
+        return int(total_duration)
+    elif total_duration == "":
+        return 900
+    elif total_duration.isascii():
+        print("Invalid")
+        get_total_duration()
+
 
 
 def choose_movement_pattern():
@@ -87,9 +93,8 @@ def choose_movement_pattern():
 
 
 def get_custom_pattern():
-    a = input("Podaj swój niestandardowy wzorzec (np. 'wasd'): ")
-    # Usunięcie nadmiarowych spacji z każdego elementu ciągu znaków
-    a = "".join(a.split()).split(',')
+    a = input("Enter your custom Pattern (e.g 'space', 'a', 'shift'): ")
+    a = "".join(a.lower().split()).split(',')
     return a
 
 
@@ -101,11 +106,13 @@ def simulate_movement(press_duration, total_duration, start_presentmon, movement
 
     if start_presentmon:
         start_recording()
+
     directions = movement_pattern if movement_pattern else ['w', 'a', 's', 'd']
     start_time = time.time()
     while True:
+        signal.signal(signal.SIGINT, signal_handler)
         current_time = time.time()
-        if current_time - start_time > total_duration:
+        if total_duration > 0 and current_time - start_time > total_duration:
             break
         if f10_pressed:
             print("F10 pressed. Aborting")
@@ -113,21 +120,20 @@ def simulate_movement(press_duration, total_duration, start_presentmon, movement
         if not movement_pattern:
             random.shuffle(directions)
         for direction in directions:
-            if current_time - start_time > total_duration:
-                break
             walk(direction, press_duration)
-            current_time = time.time()  # Aktualizuj czas po każdym kroku
+            current_time = time.time()
 
-    stop_recording()
+    if start_presentmon:
+        stop_recording()
     print("Simulation finished.")
 
 
 if __name__ == '__main__':
     start_presentmon = run_presentmon()
+    press_duration = choose_press_duration()
     if start_presentmon:
-        press_duration = choose_press_duration()
         total_duration = get_total_duration()
-        movement_pattern = choose_movement_pattern()
-        simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern)
     else:
-        print("Exiting script.")
+        total_duration = 0
+    movement_pattern = choose_movement_pattern()
+    simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern)
