@@ -1,9 +1,24 @@
-import pyautogui
+import pydirectinput as pdi
+import pyautogui as pg
 import time
 import random
 import sys
 import signal
 import keyboard
+import threading
+
+f10_pressed = False
+
+
+def listen_for_f10():
+    global f10_pressed
+    while True:
+        if keyboard.is_pressed('f10'):
+            f10_pressed = True
+            break
+
+
+
 
 
 # Obsługa sygnałów zamykania
@@ -13,28 +28,32 @@ def signal_handler(signal, frame):
 
 
 def start_recording():
-    pyautogui.hotkey('shift', 'f11')
+    pg.hotkey('shift', 'f11')
     print("Recording started...")
 
 
 def stop_recording():
     print('Stopping CapFrame...')
-    pyautogui.hotkey('shift', 'f11')
+    pg.hotkey('shift', 'f11')
     time.sleep(2)
 
 
 def walk(direction, duration):
-    pyautogui.keyDown(direction)
+    pdi.keyDown(direction)
     time.sleep(duration)
-    pyautogui.keyUp(direction)
+    pdi.keyUp(direction)
 
 
 def get_input(prompt, options):
     print(prompt)
     for key, value in options.items():
         print(f"{value}: {key}")
-    choice = input("Selection: ").lower()
-    return choice
+    while True:
+        choice = input("Selection: ").lower()
+        if choice in options:
+            return choice
+        else:
+            print("Invalid Option")
 
 
 def run_presentmon():
@@ -75,6 +94,8 @@ def get_custom_pattern():
 
 
 def simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern):
+    f10_listener_thread = threading.Thread(target=listen_for_f10)
+    f10_listener_thread.start()
     print("Press ENTER to start walking...")
     keyboard.wait('enter')
 
@@ -86,7 +107,8 @@ def simulate_movement(press_duration, total_duration, start_presentmon, movement
         current_time = time.time()
         if current_time - start_time > total_duration:
             break
-        if keyboard.is_pressed('f10'):
+        if f10_pressed:
+            print("F10 pressed. Aborting")
             break
         if not movement_pattern:
             random.shuffle(directions)
@@ -100,12 +122,12 @@ def simulate_movement(press_duration, total_duration, start_presentmon, movement
     print("Simulation finished.")
 
 
-
 if __name__ == '__main__':
-    if run_presentmon():
+    start_presentmon = run_presentmon()
+    if start_presentmon:
         press_duration = choose_press_duration()
         total_duration = get_total_duration()
         movement_pattern = choose_movement_pattern()
-        simulate_movement(press_duration, total_duration, True, movement_pattern)
+        simulate_movement(press_duration, total_duration, start_presentmon, movement_pattern)
     else:
         print("Exiting script.")
